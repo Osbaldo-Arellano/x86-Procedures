@@ -9,7 +9,7 @@ TITLE Nested Loops and Procedures     (Proj4_arellano.asm)
 ;				The prpogram will verify that N is in range.
 ;				If N is not in range, the program will keep requesting input until valid input is detected. 
 ;				When the program gets valid input, it will calculate N primes and display them to the user. 
-;				Ten prime numbers will be displayed per line with three spaces between the next primes. 
+;				Ten prime numbers will be displayed per line with three spaces between each prime. 
 ;				The final line might have fewer than ten primes. 
 
 INCLUDE Irvine32.inc
@@ -40,13 +40,14 @@ primeCount      DWORD	?			; Holds current number of primes displayed. New line i
 ; ---------------------------------------------------------------------------------
 ; Name: main
 ;
-; Entry point of the program. Calls procedures to calculate and display primes. 
+; Entry point of the program. Calls procedures to calculate and display N primes. 
+;
 ; ---------------------------------------------------------------------------------
 main PROC
-	call	introduction
-	call	getUserData
-	call	showPrimes
-	call	farewell
+	call	introduction                     ; Displays program introduction. 
+	call	getUserData                      ; Asks for user input N in the range of [1,200] inclusive. 
+	call	showPrimes                       ; Displays N prime numbers.  
+	call	farewell                         ; Displays a goodbye message. 
 
 	Invoke ExitProcess,0	
 main ENDP
@@ -56,7 +57,7 @@ main ENDP
 ; Name: introduction
 ;
 ; Displays a welcome message and displays instructions. 
-; Returns: none
+;
 ; ---------------------------------------------------------------------------------
 introduction PROC
 	mov     edx, OFFSET intro
@@ -75,8 +76,7 @@ introduction ENDP
 ; If validFlag is false, the program will ask for addtional input 
 ;	until validFlag is true. 
 ; 
-; Returns: none
-; Recevies: none (program uses globals)
+; Returns: none (uses globals)
 ; ---------------------------------------------------------------------------------
 getUserData PROC
 	_getInput:
@@ -85,7 +85,7 @@ getUserData PROC
 		call	ReadDec
 		mov     range, eax
 		call	validate
-		cmp		validFlag, 0		           ; If flag != 1, then input is not valid
+        cmp     validFlag,0                  ; If flag != 1, then input is not valid
 		je		_getInput
 		call	CrLf
 		ret
@@ -102,15 +102,15 @@ getUserData ENDP
 ; Returns: none (uses globals)
 ; ---------------------------------------------------------------------------------
 validate PROC
-	cmp		range, LOWER				      ; Checking lower bound
+    cmp     range, LOWER                     ; Checking lower bound
 	jl		_notValid
-	cmp		range, UPPER				      ; Checking upper bound
+    cmp     range, UPPER                     ; Checking upper bound
 	jg		_notValid
-	mov		validFlag, 1				      ; Set flag to 1. Calling procedure wil check flag.
+    mov     validFlag, 1                     ; Set flag to 1. Calling procedure wil check flag.
 	ret
 
 	_notValid:
-		ret				                      ; Dont set flag, just return. 
+    ret                                      ; Dont set flag, just return. 
 validate ENDP
 
 
@@ -122,27 +122,27 @@ validate ENDP
 ;	three spaces. Ten prime numbers are displayed per line. The final line might have fewer
 ;	than 10 primes. 
 ;
-; Preconditions: global variable 'range' to be initialized to a valid number. 
+; Preconditions: global variable 'range' to be initialized to a valid number in range [1,200]
 ;
 ; Returns: none
 ; ---------------------------------------------------------------------------------
 showPrimes PROC
-	mov	    eax, range
+	mov     eax, range
 	call	WriteDec
 	mov     edx, OFFSET valid
 	call	WriteString
 	call	CrLf
 
 	cmp     range, 1
-	je      _singlePrime                     ; If range is 1, then we need to only display 2 and return. 
+	je      _singlePrime                    ; If range is 1, then we only need to display 2 and return. 
 
-	mov     eax, 2                           ; Display 2 by default since it's guaranteed. 
+	mov     eax, 2                          ; Display 2 by default
 	call	WriteDec
 	mov     edx, OFFSET threeSpaces
 	call	WriteString
 
-	inc     primeCount                       ; Increment since 2 is displayed by default
-	dec     range                            ; Decrement range since we already displayed 2 -- displaying one fewer prime. 
+	inc     primeCount                      ; Increment since 2 is always displayed
+	dec     range                           ; Decrement range since we already displayed 2 (displaying one less prime). 
 
 	; ----------------------
 	; Main loop to iterate through each number
@@ -151,16 +151,16 @@ showPrimes PROC
 	; the loop counter outside the procedure. 
 	;
 	; Called procedure 'isPrime' sets global variable 'primeFlag' to true or false. 
-	; If primeFlag is true, then the current number in the loop is displayed. 
+	; Jumps to _isPrime if primeFlag is true; the current number in the loop is displayed. 
 	; -----------------------
-	mov     ecx, range                         ; Loop counter initialized to range (user input)
+    mov     ecx, range                       ; Loop counter initialized to range (user input)
 	_loop:
 		push    ecx
 		call	isPrime
 		pop     ecx
 		cmp     primeFlag, 1
 		je      _isPrime	 
-		inc     ecx                          ; Current number is not prime. Increment counter by 1 to not termiate loop early. 
+        inc     ecx                          ; Current number is not prime. Increment counter by 1 to not termiate loop early. 
 		inc     current
 		loop	_loop
 		ret
@@ -172,7 +172,7 @@ showPrimes PROC
 		call    WriteString
 		inc     current
 		inc     primeCount
-		cmp     primeCount, 10               ; New line is printed after 10 primes are displayed.
+        cmp     primeCount, 10               ; New line is printed after 10 primes are displayed.
 		je      _printLine
 		loop	_loop
 		ret
@@ -204,25 +204,25 @@ showPrimes ENDP
 ;
 ; Checks if the current number from the calling procedure is prime. 
 ; Uses DIV and checks remainder in EDX to know if current number is not prime.
-; If the remainder is zero, then current number is not prime and the primeFlag is set to flase. 
-; The calling procedure wont display the current number. 
+; If the remainder is zero, then current number is not prime and the primeFlag is set to flase;
+;	the calling procedure wont display the current number. 
+; Otherwiese primeFlag is set to true; the calling procedure prints the current number. 
 ;
-; Once loop terminates, primeFlag is set to true. If primeFlag is true, 
-;	the calling procedure prints the current number. 
-;
-; Preconditions: Global variable initialized to a valid number. 
+; Preconditions: Global variable initialized to a valid number in the range of [1,200]
 ; ---------------------------------------------------------------------------------
 isPrime PROC
-	mov		divisor, 2                  ; Reinitalize the divisor since divisor is incremented every call 
-	mov		edx, 0
-	mov		eax, current
-	div		divisor
+    mov     divisor, 2                      ; Reinitalize the divisor since divisor is incremented every call 
+	mov     edx, 0
+	mov     eax, current
+	div     divisor
 
 	; ---------------------
-	; Loop range is always 2 (divisor) to (current number / 2). 
-	; No need to check any number above half the current number. 
+	; Loop range is always 2 to (current number / 2). 
+	; No need to check above half the current number. 
+	; Using remainder in EDX to check if current number is not prime. 
+	; Loop terminates when divsor = half. 
 	; ---------------------
-	mov		half, eax					   
+	mov     half, eax					   
 	_loop:
 		mov     edx, 0
 		mov     eax, current
@@ -231,10 +231,10 @@ isPrime PROC
 		je      _notPrime
 		inc     divisor
 		mov     eax, half
-		cmp     divisor, eax               ; Checks loop range (divisor <= half)
+        cmp     divisor, eax               ; Checks loop range (divisor < half)
 		jl      _loop
 
-	mov     primeFlag, 1                   ; Once loop terminates, it's concluded that current number is prime
+    mov     primeFlag, 1                   ; If loop terminates, the current number is prime.
 	ret
 
 	_notPrime:
