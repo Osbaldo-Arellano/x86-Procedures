@@ -23,7 +23,7 @@ intro	        BYTE	"Prime Numbers Programmed by Osbaldo Arellano",13,10,13,10
                 BYTE	"Number must be within 1 and 200 inclusive.",13,10,0
 inputMssg       BYTE	"Enter the number of primes to be displayed in range [1...200]: ",13,10,0
 invalid	        BYTE	"Number is not in range. Try again.",13,10,13,10,0
-valid           BYTE	" prime number(s) will be displayed",13,10,0
+valid           BYTE	" prime number(s) will be displayed.",13,10,0
 goodbye         BYTE	"Results certified by Osbaldo Arellano. Goodbye! ",13,10,0
 threeSpaces     BYTE    "   ",0     ; Three spaces are printed between each prime
 current         DWORD	3			; Since we are displaying 2 by default, we'll start at 3 for prime checking
@@ -80,15 +80,14 @@ introduction ENDP
 ; ---------------------------------------------------------------------------------
 getUserData PROC
 	_getInput:
-		mov     edx, OFFSET inputMssg
-		call	WriteString
-		call	ReadDec
-		mov     range, eax
-		call	validate
+        mov     edx, OFFSET inputMssg
+        call	WriteString
+        call	ReadDec
+        mov     range, eax
+        call	validate
         cmp     validFlag,0                  ; If flag != 1, then input is not valid
-		je		_getInput
-		call	CrLf
-		ret
+        je      _getInput
+        ret
 getUserData ENDP
 
 
@@ -103,14 +102,16 @@ getUserData ENDP
 ; ---------------------------------------------------------------------------------
 validate PROC
     cmp     range, LOWER                     ; Checking lower bound
-	jl		_notValid
+    jl      _notValid
     cmp     range, UPPER                     ; Checking upper bound
-	jg		_notValid
+    jg      _notValid
     mov     validFlag, 1                     ; Set flag to 1. Calling procedure wil check flag.
-	ret
+    ret
 
 	_notValid:
-    ret                                      ; Dont set flag, just return. 
+        mov     edx, OFFSET invalid
+        call	WriteString
+        ret                                      ; Dont set flag, just return. 
 validate ENDP
 
 
@@ -127,6 +128,7 @@ validate ENDP
 ; Returns: none
 ; ---------------------------------------------------------------------------------
 showPrimes PROC
+	call	CrLf
 	mov     eax, range
 	call	WriteDec
 	mov     edx, OFFSET valid
@@ -153,7 +155,7 @@ showPrimes PROC
 	; Called procedure 'isPrime' sets global variable 'primeFlag' to true or false. 
 	; Jumps to _isPrime if primeFlag is true; the current number in the loop is displayed. 
 	; -----------------------
-    mov     ecx, range                       ; Loop counter initialized to range (user input)
+	mov     ecx, range                       ; Loop counter initialized to range (user input)
 	_loop:
 		push    ecx
 		call	isPrime
@@ -212,9 +214,9 @@ showPrimes ENDP
 ; ---------------------------------------------------------------------------------
 isPrime PROC
     mov     divisor, 2                      ; Reinitalize the divisor since divisor is incremented every call 
-	mov     edx, 0
-	mov     eax, current
-	div     divisor
+    mov     edx, 0
+    mov     eax, current
+    div     divisor
 
 	; ---------------------
 	; Loop range is always 2 to (current number / 2). 
@@ -222,7 +224,7 @@ isPrime PROC
 	; Using remainder in EDX to check if current number is not prime. 
 	; Loop terminates when divsor = half. 
 	; ---------------------
-	mov     half, eax					   
+    mov     half, eax					   
 	_loop:
 		mov     edx, 0
 		mov     eax, current
@@ -235,7 +237,7 @@ isPrime PROC
 		jl      _loop
 
     mov     primeFlag, 1                   ; If loop terminates, the current number is prime.
-	ret
+    ret
 
 	_notPrime:
 		mov     primeFlag, 0
